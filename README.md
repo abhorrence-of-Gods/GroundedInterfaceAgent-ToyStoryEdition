@@ -39,7 +39,7 @@ python -m environments.human_feedback_interface &
 streamlit run dashboard/attention_dashboard.py &
 
 # training with ULWT config
-python run.py model=gia_tse_ulwt.yaml
+python main.py model=gia_tse_ulwt
 ```
 
 The new config `configs/model/gia_tse_ulwt.yaml` enables:
@@ -106,38 +106,44 @@ The Toy-Story Edition extends the GIA-Warp agent with modules for multi-robot co
 
 ```mermaid
 graph TD
+    %% Edge Robots (Multiple)
     subgraph "Edge Robots (Multiple)"
         direction LR
         Robot1_Sensors --> R1_Encoder[Encoder]
         Robot2_Sensors --> R2_Encoder[Encoder]
-        R1_Encoder -->|"z_real (bot1)"| CentralBrain
-        R2_Encoder -->|"z_real (bot2)"| CentralBrain
+        R1_Encoder -->|"z_real (bot1)"| StreamingServer
+        R2_Encoder -->|"z_real (bot2)"| StreamingServer
     end
 
+    %% Central Brain (Server)
     subgraph "Central Brain (Server)"
         direction TB
+
+        %% A. Latent Space Fusion & World Model
         subgraph "A. Latent Space Fusion & World Model"
-            CentralBrain[Streaming Server] --> SLW(SLW-Transformer)
+            StreamingServer[Streaming Server] --> SLW[SLW-Transformer]
             WorldModel_Dreamer[Dreamer World Model] -->|"z_imag, u_imag"| SLW
-    end
-    
+        end
+
+        %% B. Policy & Value Estimation
         subgraph "B. Policy & Value Estimation"
             SLW --> Fused_Context
-            Goal(Goal Latent Bank) --> Fused_Context
+            Goal[Goal Latent Bank] --> Fused_Context
             Fused_Context --> Policy[Actor-Critic]
             Fused_Context --> ValueHead[Value Function V(z)]
             Policy --> Action_Vecs
-    end
-
-        subgraph "C. Dynamic Learning & Reward"
-            MetaLoss(Meta Loss Net) -->|loss weights| WorldModel_Dreamer
-            HyperReward[Hyper Reward Head r(z,u)]
-            Fused_Context --> MetaLoss
-            SLW --> HyperReward
         end
 
-        Action_Vecs --> CentralBrain
+        %% C. Dynamic Learning & Reward
+        subgraph "C. Dynamic Learning & Reward"
+            MetaLoss[Meta Loss Net] -->|"loss weights"| WorldModel_Dreamer
+            Fused_Context --> MetaLoss
+            SLW --> HyperReward[Hyper Reward Head r(z,u)]
+        end
+
+        Action_Vecs --> StreamingServer
     end
+
 ```
 
 ### Component Map
