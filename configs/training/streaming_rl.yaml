@@ -1,0 +1,39 @@
+defaults:
+  - model: gia_tse
+
+num_epochs: 3
+batch_size: 32
+log_interval: 50
+max_grad_norm: 1.0
+meta_variance_reg_weight: 0.01
+
+# --- RL Hyperparameters ---
+gamma: 0.99
+lambda_ac: 0.95
+entropy_coeff: 0.001
+horizon: 15 # Deprecated, use macro/micro instead
+macro_horizon: 3
+micro_horizon: 5
+kl_anneal_epochs: 10
+
+optimizer:
+  _target_: torch.optim.AdamW
+  lr: 1e-4
+  betas: [0.9, 0.999]
+  weight_decay: 0.01
+
+scheduler:
+  _target_: torch.optim.lr_scheduler.CosineAnnealingLR
+  T_max: 10000
+
+dataset_roots:
+  - data/robot_logs
+
+checkpoint_dir: "checkpoints/streaming_rl"
+
+training:
+  loss_weights:
+    policy_loss: 1.0
+    value_loss: 0.5
+    recon_loss: 1.0
+    kl_loss: 0.1 

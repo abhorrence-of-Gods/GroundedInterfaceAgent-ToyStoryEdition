@@ -1,0 +1,108 @@
+# Toy-Story Edition model config with advanced Warp & SLW modules
+# Save as configs/model/gia_tse.yaml
+
+# Towers stay identical to 8B baseline -------------------------------
+language_tower:
+  _target_: models.towers.language_tower.LanguageTower
+  model_name: "meta-llama/Meta-Llama-3-8B"
+  max_new_tokens: 256
+  is_frozen: true
+  use_8bit: true
+
+perception_tower:
+  _target_: models.towers.perception_tower.PerceptionTower
+  model_name: null
+  is_frozen: true
+
+action_tower:
+  _target_: models.towers.action_tower.ActionTower
+  latent_state_dim: 4096
+  latent_action_dim: 256
+  concrete_action_dim: 4
+  warp_output_dim: 16
+
+  # Action space limits for physical robots
+  # Used by the safety probe to clip actions before execution.
+  # Format: [min_val, max_val] for each action dimension.
+  action_limits:
+    - [-1.0, 1.0]  # Gripper open/close
+    - [-1.57, 1.57] # Joint 1 (rad)
+    - [-1.57, 1.57] # Joint 2 (rad)
+    - [-1.57, 1.57] # Joint 3 (rad)
+
+perception_decoder:
+  _target_: models.decoders.perception_decoder.PerceptionDecoder
+  input_dim: 4096
+
+spacetime_encoder:
+  _target_: models.dynamics.spacetime_encoder.SpacetimeEncoder
+  input_dim: 16
+  output_dim: 4096
+
+spacetime_decoder:
+  _target_: models.dynamics.spacetime_decoder.SpacetimeDecoder
+  input_dim: 4096
+  output_dim: 16
+
+# Dreamer components -------------------------------------------------
+# --- DEPRECATED in Toy-Story Edition ---
+# transition_model:
+#   _target_: models.dreamer.transition_model.TransitionModel
+#   latent_state_dim: 4096
+#   latent_action_dim: 256
+# reward_head:
+#   _target_: models.dreamer.reward_head.RewardHead
+#   latent_state_dim: 4096
+
+# --- Meta-Cognitive Components (New) ---
+meta_transition_model:
+  _target_: models.dreamer.meta_transition_model.MetaTransitionModel
+  latent_state_dim: 4096
+  latent_action_dim: 256
+  value_latent_dim: 256
+  goal_dim: 16
+  hidden_dim: 2048
+
+hyper_reward_head:
+  _target_: models.dreamer.hyper_reward_head.HyperRewardHead
+  latent_state_dim: 4096
+  value_latent_dim: 256
+  hyper_hidden_dim: 512
+
+macro_action_tower:
+  _target_: models.towers.macro_action_tower.MacroActionTower
+  latent_state_dim: 4096
+  goal_dim: 16
+  num_subgoals: 64
+  subgoal_dim: 128
+  hidden_dim: 1024
+
+value_head:
+  _target_: models.dreamer.value_head.ValueHead
+  latent_state_dim: 4096
+
+bridge:
+  _target_: models.bridge.grounding_bridge.GroundingBridge
+  type: CrossAttention
+  num_layers: 4
+  hidden_dim: 4096
+
+# --- Toy-Story Extensions ------------------------------------------
+space_warp3d:
+  enabled: true
+  in_dim: 4
+
+time_warp_unc:
+  enabled: true
+
+goal_warp_tasked:
+  n_tasks: 10
+
+delta_warp_cf:
+  enabled: true
+
+slw_transformer:
+  layers: 4
+  heads: 8
+
+use_grad_checkpoint: false 
