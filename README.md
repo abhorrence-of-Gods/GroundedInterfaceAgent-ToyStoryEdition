@@ -109,8 +109,8 @@ graph TD
     %% Edge Robots (Multiple)
     subgraph "Edge Robots (Multiple)"
         direction LR
-        Robot1_Sensors --> R1_Encoder[Encoder]
-        Robot2_Sensors --> R2_Encoder[Encoder]
+        Robot1_Sensors --> R1_Encoder["Encoder"]
+        Robot2_Sensors --> R2_Encoder["Encoder"]
         R1_Encoder -->|"z_real (bot1)"| StreamingServer
         R2_Encoder -->|"z_real (bot2)"| StreamingServer
     end
@@ -121,29 +121,28 @@ graph TD
 
         %% A. Latent Space Fusion & World Model
         subgraph "A. Latent Space Fusion & World Model"
-            StreamingServer[Streaming Server] --> SLW[SLW-Transformer]
-            WorldModel_Dreamer[Dreamer World Model] -->|"z_imag, u_imag"| SLW
+            StreamingServer["Streaming Server"] --> SLW["SLW-Transformer"]
+            WorldModel_Dreamer["Dreamer World Model"] -->|"z_imag, u_imag"| SLW
         end
 
         %% B. Policy & Value Estimation
         subgraph "B. Policy & Value Estimation"
             SLW --> Fused_Context
-            Goal[Goal Latent Bank] --> Fused_Context
-            Fused_Context --> Policy[Actor-Critic]
+            Goal["Goal Latent Bank"] --> Fused_Context
+            Fused_Context --> Policy["Actor-Critic"]
             Fused_Context --> ValueHead["Value Function V(z)"]
             Policy --> Action_Vecs
         end
 
         %% C. Dynamic Learning & Reward
         subgraph "C. Dynamic Learning & Reward"
-            MetaLoss[Meta Loss Net] -->|"loss weights"| WorldModel_Dreamer
+            MetaLoss["Meta Loss Net"] -->|"loss weights"| WorldModel_Dreamer
             Fused_Context --> MetaLoss
-            SLW --> HyperReward[Hyper Reward Head r(z,u)]
+            SLW --> HyperReward["Hyper Reward Head r(z,u)"]
         end
 
         Action_Vecs --> StreamingServer
     end
-
 
 ```
 
