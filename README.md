@@ -130,7 +130,7 @@ graph TD
             SLW --> Fused_Context
             Goal[Goal Latent Bank] --> Fused_Context
             Fused_Context --> Policy[Actor-Critic]
-            Fused_Context --> ValueHead[Value Function V(z)]
+            Fused_Context --> ValueHead["Value Function V(z)"]
             Policy --> Action_Vecs
         end
 
@@ -143,6 +143,7 @@ graph TD
 
         Action_Vecs --> StreamingServer
     end
+
 
 ```
 
